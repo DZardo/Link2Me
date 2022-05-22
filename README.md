@@ -30,7 +30,7 @@ La separazione tra model e controller avviene grazie a Entity Framework, mentre 
 
 Il testing iniziale degli endpoint è stato eseguito con Postman, qui il link con la collezione dei vari test:
 
-[Postman collection](https://www.postman.com/collections/730bc5c5de95aae85364)
+[Postman collection](https://www.getpostman.com/collections/249ef27a71e36add62be)
 
 Le chiamate ad uso esclusivo degli account di amministrazione (es. creazione, modifica o cancellazione di un employee) hanno come requisito il parametro "securityKey" da avere nella header di ogni request, che idealmente sarà una stringa crittata che verrà confrontata lato backend con una chiave corrispondente salvata su database prima di eseguire. Nella implementazione corrente si limita a verificare che corrisponda a una semplice stringa hardcoded nella classe del controller.
 
