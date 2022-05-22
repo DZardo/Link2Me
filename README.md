@@ -78,6 +78,7 @@ Restituisce la distanza tra un impiegato (idealmente quello relativo all'utente 
 
 - `POST api/login`
 - `POST api/friends/{friendId}`
+
 L'endpoint richiamato nella procedura di login. Verifica le credenziali e restituisce un oggetto con i dati relativi all'utente, tra cui la securityKey se l'utente è un amministratore.
 
 # Funzionalità mancanti o parziali
