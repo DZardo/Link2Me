@@ -1,0 +1,20 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p id="pageNavigation"><a href="userpage">User page</a>&emsp;</p>
+</div>
+
+@section scripts {
+    <script>
+        $(function() {
+            if(sessionStorage.getItem("securityKey") == "123") {
+                $("#pageNavigation").append('<a href="adminpage">Admin page</a>');
+            }        
+        });
+    </script>
+}

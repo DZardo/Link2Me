@@ -1,0 +1,134 @@
+﻿@page
+@using Link2Me.Models
+@{
+    ViewData["Title"] = "User page";
+}
+
+<div class="text-center">
+    <h1 class="display-4"><a href="@Request.Headers["Referer"].ToString()" class="navigation">«</a>User page</h1>
+</div>
+
+<div>
+    <form id="employeesForm" onsubmit="loadEmployees();return false" method="post">
+        @Html.TextBox("firstName", "", new {placeholder = "First Name"})
+        @Html.TextBox("lastName", "", new {placeholder = "Last Name"})
+        @Html.DropDownList("departmentsList", new SelectList(Enumerable.Empty<SelectListItem>()))
+        <input id="employeesFormSubmit" type="submit" value="Search"/>
+    </form>
+    <br/>
+    <br/>
+    <table><tr><td><ul id="employeesList"></ul></td><td>&nbsp;</td><td><table id="employeeDetails"></table></td></tr></table>
+</div>
+
+@section scripts {
+    <script>
+
+        var employeesForm = $("employeesForm");
+        var departmentsList = $("#departmentsList");
+        var employeesList = $("#employeesList");
+        var employeeDetails = $("#employeeDetails");
+        var friendsList;
+
+        $(function() {
+            departmentsList.empty().append('<option selected="selected" value="0" disabled="disabled">Loading...</option>');
+            $.ajax ({
+                type: "GET",
+                url: "api/departments",
+                success: function(response) {
+                    departmentsList.empty().append('<option selected="selected" value="0">-- Select Department --</option>');
+                    $.each(response, function() {
+                        departmentsList.append($("<option></option>").val(this['id']).html(this['name']));
+                    });
+                }
+            })
+        });
+
+        $(function() {
+            employeesList.empty().append('<p>Loading...</p>');
+            loadFriendsList();         
+        });
+
+        function loadFriendsList() {
+            var userEmployeeId = sessionStorage.getItem("userEmployeeId");
+
+            $.ajax({
+                type: "GET",
+                url: "api/friends",
+                data: { userEmployeeId: userEmployeeId },
+                success: function(response) {
+                    friendsList = response;
+                    loadEmployees();
+                }
+            })
+        }
+
+        function loadEmployees() {
+            var firstName = $("#firstName").val();
+            var lastName = $("#lastName").val();
+            var departmentId = departmentsList.val();
+
+            employeesList.empty();
+
+            $.ajax({
+                type: "GET",
+                url: "api/employees",
+                data: { firstName:firstName, lastName:lastName, departmentId:departmentId },
+                success: function(response) {
+                    $.each(response, function() {
+                        var friendButton = "";
+
+                        if(friendsList.find(f => f.friendId == this['id']) == undefined) {
+                            friendButton = "<input type='button' value='Add' onclick='addFriend(" + this['id'] + ")'/>";
+                        }
+                        else {
+                            friendButton = "<input type='button' value='Remove' onclick='removeFriend(" + this['id'] + ")'/>";
+                        }
+
+                        if(sessionStorage.getItem("userEmployeeId") != this['id']) {
+                            employeesList.append($("<li></li>").val(this['id']).html(this['firstName'] + ' ' + this['lastName'])).append(friendButton);
+                        }
+                    });
+                }
+            })
+        }
+
+        employeesList.on('click', 'li', function() {
+            $.ajax ({
+                type: "GET",
+                url: "api/employees/" + this.value,
+                success: function(response) {
+                    employeeDetails.empty();
+                    for (var key in response) {
+                        employeeDetails.append($("<tr></tr>").append($("<td></td>").html(key)).append($("<td></td>").html(response[key])));
+                    }
+                }
+            })
+        });
+
+        function addFriend(employeeId) {
+            var userEmployeeId = sessionStorage.getItem("userEmployeeId");
+
+            $.ajax ({
+                type: "POST",
+                url: "api/friends/" + employeeId,
+                data: { userEmployeeId: userEmployeeId },
+                complete: function() {
+                    loadFriendsList();
+                }
+            })
+        }
+
+        function removeFriend(employeeId) {
+            var userEmployeeId = sessionStorage.getItem("userEmployeeId");
+
+            $.ajax ({
+                type: "DELETE",
+                url: "api/friends/" + employeeId,
+                data: { userEmployeeId: userEmployeeId },
+                complete: function() {
+                    loadFriendsList();
+                }
+            })
+        }
+    </script>
+}

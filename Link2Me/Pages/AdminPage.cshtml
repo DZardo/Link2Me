@@ -1,0 +1,203 @@
+﻿@page
+@using Link2Me.Models
+@{
+    ViewData["Title"] = "Admin page";
+}
+
+<div class="text-center">
+    <h1 class="display-4"><a href="@Request.Headers["Referer"].ToString()" class="navigation">«</a>Admin page</h1>
+</div>
+
+<div>
+    <form id="newEmployeeForm" onsubmit="employeeFormSubmit();return false" method="post">
+        <table>
+            <tr>
+                <td colspan="2"><h2 id="formTitle">Create new employee profile</h2></td>
+            </tr>
+            <tr>
+                <td><p>Employee ID: </p></td>
+                <td>@Html.TextBox("employeeId", "", new {disabled="true"})</td>
+            </tr>
+            <tr>
+                <td>@Html.TextBox("firstName", "", new {placeholder = "First Name"})</td>
+                <td>@Html.TextBox("lastName", "", new {placeholder = "Last Name"})</td>
+            </tr>
+            <tr>
+                <td>@Html.TextBox("dateOfBirth", "", new {placeholder = "Date Of Birth"})</td>
+                <td>@Html.TextBox("address", "", new {placeholder = "Address"})</td>
+            </tr>
+            <tr>
+                <td>@Html.TextBox("email", "", new {placeholder = "Email"})</td>
+                <td>@Html.TextBox("telephone", "", new {placeholder = "Telephone"})</td>
+            </tr>
+            <tr>
+                <td>@Html.DropDownList("departmentsList", new SelectList(Enumerable.Empty<SelectListItem>()))</td>
+            </tr>
+            <tr>
+                <td><input id="employeesFormSubmit" type="submit" value="Create New"/></td>
+                <td><input id="clearForm" type="reset" value="Clear Form"/></td>
+            </tr>
+        </table>
+    </form>
+    <p id="errorMessage"></p>
+
+    <div><ul id="employeesList"></ul></div>
+</div>
+
+@section scripts {
+    <script>
+
+        var departmentsList = $("#departmentsList");
+        var employeesList = $("#employeesList");
+        
+        $(function() {
+            departmentsList.empty().append('<option selected="selected" value="0" disabled="disabled">Loading...</option>');
+            $.ajax ({
+                type: "GET",
+                url: "api/departments",
+                success: function(response) {
+                    departmentsList.empty().append('<option selected="selected" value="0">-- Select Department --</option>');
+                    $.each(response, function() {
+                        departmentsList.append($("<option></option>").val(this['id']).html(this['name']));
+                    });
+                }
+            })
+        }); 
+
+        $(function() {
+            employeesList.empty().append('<p>Loading...</p>');
+            loadEmployees();
+        });
+
+        function loadEmployees() {
+            employeesList.empty();
+
+            $.ajax({
+                type: "GET",
+                url: "api/employees",
+                success: function(response) {
+                    $.each(response, function() {
+                        var deleteButton = "<input type='button' value='Delete' onclick='deleteEmployee(" + this['id'] + ")'/>";
+
+                        if(sessionStorage.getItem("userEmployeeId") != this['id']) {
+                            employeesList.append($("<li></li>").val(this['id']).html(this['firstName'] + ' ' + this['lastName']).append(deleteButton));
+                        }
+                    });
+                }
+            })
+        }
+
+        employeesList.on('click', 'li', function() {
+            loadEmployeeOnForm(this.value);
+        });
+
+        function employeeFormSubmit() {
+            if($("#employeeId").val() > 0)
+                updateEmployee();
+            else
+                createNewEmployee();
+        }
+
+        function createNewEmployee() {
+            var employeeId = $("#employeeId").val();
+            var firstName = $("#firstName").val();
+            var lastName = $("#lastName").val();
+            var dateOfBirth = $("#dateOfBirth").val();
+            var address = $("#address").val();
+            var departmentId = departmentsList.val();
+            var email = $("#email").val();
+            var telephone = $("#telephone").val();
+
+            $.ajax({
+                type: "POST",
+                url: "api/employees",
+                headers: {
+                    'securityKey': sessionStorage.getItem("securityKey")
+                },
+                data: { firstName:firstName, lastName:lastName, dateOfBirth:dateOfBirth, address:address, departmentId:departmentId, email: email, telephone:telephone },
+                success: function(response) {
+                    $("#errorMessage").html("Employee succesfully added");
+                },
+                error: function(response) {
+                    $("#errorMessage").html("Error: " + response.status + " " + response.title);
+                },
+                complete: function() {
+                    loadEmployees();
+                }
+            })
+        }
+
+        function updateEmployee() {
+            var employeeId = $("#employeeId").val();
+            var firstName = $("#firstName").val();
+            var lastName = $("#lastName").val();
+            var dateOfBirth = $("#dateOfBirth").val();
+            var address = $("#address").val();
+            var departmentId = departmentsList.val();
+            var email = $("#email").val();
+            var telephone = $("#telephone").val();
+
+            $.ajax({
+                type: "PUT",
+                url: "api/employees/" + employeeId,
+                headers: {
+                    'securityKey': sessionStorage.getItem("securityKey")
+                },
+                data: { firstName:firstName, lastName:lastName, dateOfBirth:dateOfBirth, address:address, departmentId:departmentId, email: email, telephone:telephone },
+                success: function(response) {
+                    $("#errorMessage").html("Employee succesfully updated");
+                },
+                error: function(response) {
+                    $("#errorMessage").html("Error: " + response.status + " " + response.title);
+                },
+                complete: function() {
+                    loadEmployees();
+                }
+            })
+        }
+
+        function loadEmployeeOnForm(loadEmployeeId) {
+            $("#formTitle").html("Edit existing employee");
+            $("#employeesFormSubmit").val("Submit");
+            $.ajax ({
+                type: "GET",
+                url: "api/employees/" + loadEmployeeId,
+                success: function(response) {
+                    for (var key in response) {
+                        console.log(key + " " + response[key]);
+                        if(key == "id")
+                            $("#employeeId").val(response[key]);
+                        if(key == "departmentId")
+                            $("#departmentsList").val(response[key]);
+                        else
+                            $("#" + key + "").val(response[key]);
+                    }
+                }
+            })
+        }
+
+        function deleteEmployee(employeeId) {
+            $.ajax({
+                type: "DELETE",
+                url: "api/employees/" + employeeId,
+                headers: {
+                    'securityKey': sessionStorage.getItem("securityKey")
+                },
+                success: function(response) {
+                    $("#errorMessage").html("Employee succesfully deleted");
+                },
+                error: function(response) {
+                    $("#errorMessage").html("Error: " + response.status + " " + response.title);
+                },
+                complete: function() {
+                    loadEmployees();
+                }
+            })
+        }
+
+        $("#clearForm").on('click', function() {
+            $("#formTitle").html("Create new employee profile");
+            $("#employeesFormSubmit").val("Create New");
+        })
+    </script>
+}

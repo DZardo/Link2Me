@@ -1,0 +1,45 @@
+﻿@page
+@model Link2Me.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Login</h1>
+</div>
+
+<div class="text-center">
+    <form id="loginForm" onsubmit="login();return false" method="post">
+        @Html.TextBox("username", "", new {placeholder = "Username"})
+        <br/>
+        @Html.TextBox("password", "", new {placeholder = "Password", type="password"})
+        <br/>
+        <input id="loginFormSubmit" type="submit" value="Login"/>
+    </form>
+    <div><p id="errorMessage"></p></div>
+</div>
+
+@section scripts {
+    <script>
+        function login() {
+            var username = $("#username").val();
+            var password = $("#password").val();
+
+            $.ajax({
+                type: "POST",
+                url: "api/login",
+                data: { username:username, password:password },
+                success: function(response) {
+                    sessionStorage.setItem("userId", response.userId);
+                    sessionStorage.setItem("username", response.username);
+                    sessionStorage.setItem("userEmployeeId", response.userEmployeeId);
+                    sessionStorage.setItem("securityKey", response.securityKey);
+                    window.location.replace("index");
+                },
+                error: function(response) {
+                    $("#errorMessage").html("Login error: " + response.status + " " + response.title);
+                }
+            })
+        }
+    </script>
+}
