@@ -121,11 +121,6 @@ namespace Link2Me.Controllers
         {
             try
             {
-                StringValues securityKey;
-
-                if (!Request.Headers.TryGetValue("securityKey", out securityKey) || !SecurityKeyCheck(securityKey.First()))
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-
                 if (employeeId <= 0 || value == null)
                     return StatusCode(StatusCodes.Status400BadRequest);
 
