@@ -13,6 +13,7 @@ namespace Link2Me.Controllers
         {
             _context = context;
         }
+        const String SECURITY_KEY = "123";
 
         //POST api/login
         [HttpPost("[action]")]
@@ -37,7 +38,7 @@ namespace Link2Me.Controllers
                     userId = user.Id,
                     username = user.Username,
                     userEmployeeId = user.EmployeeId,
-                    securityKey = user.IsAdmin ? "123" : null
+                    securityKey = user.IsAdmin ? SECURITY_KEY : null
                 });
             }
             catch (Exception ex)

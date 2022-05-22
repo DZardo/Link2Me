@@ -94,9 +94,9 @@ namespace Link2Me.Controllers
             } 
         }
 
-        //GET api/friends/getdistance/2
-        [HttpGet("[action]/{friendId}")]
-        public IActionResult GetDistance([FromForm] int userEmployeeId, int friendId)
+        //GET api/friends/getdistance/1/2
+        [HttpGet("[action]/{userEmployeeId}/{friendId}")]
+        public IActionResult GetDistance(int userEmployeeId, int friendId)
         {
             try
             {
